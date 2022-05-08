@@ -137,6 +137,7 @@ import static org.apache.cassandra.db.Directories.SECONDARY_INDEX_NAME_SEPARATOR
  */
 public abstract class SSTableReader extends SSTable implements SelfRefCounted<SSTableReader>
 {
+    static int cc = 0; /*Added for manually delay*/	
     private static final Logger logger = LoggerFactory.getLogger(SSTableReader.class);
 
     private static final ScheduledThreadPoolExecutor syncExecutor = initSyncExecutor();
@@ -2211,6 +2212,14 @@ public abstract class SSTableReader extends SSTable implements SelfRefCounted<SS
             }
             else
                 barrier = null;
+	    //Manually added delay
+	    logger.info("Scheduling times" + (++cc));
+	    if (cc >= 1 && cc<=5){
+	    logger.info("Sleeping before nonPeriodic!");	
+	    try{Thread.sleep(1000);} 
+            catch(Exception e){}
+	    logger.info("Finished sleeping");
+            } 		
 
             ScheduledExecutors.nonPeriodicTasks.execute(new Runnable()
             {

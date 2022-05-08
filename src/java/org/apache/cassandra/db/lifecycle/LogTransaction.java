@@ -90,7 +90,8 @@ import org.apache.cassandra.utils.concurrent.Transactional;
  * See CASSANDRA-7066 for full details.
  */
 class LogTransaction extends Transactional.AbstractTransactional implements Transactional
-{
+{  
+    private static volatile int cc = 0; /*Aid in injection*/	
     private static final Logger logger = LoggerFactory.getLogger(LogTransaction.class);
 
     /**
@@ -239,7 +240,22 @@ class LogTransaction extends Transactional.AbstractTransactional implements Tran
         {
             if (logger.isTraceEnabled())
                 logger.trace("Deleting {}", file);
-
+      	    //Injection Here
+      	    StackTraceElement[] es = Thread.currentThread().getStackTrace();
+            String[] s = new String[es.length];
+            for (int i = 0; i < es.length; i++) {
+              s[i] = es[i].getClassName() + "," + es[i].getMethodName() + "," + es[i].getLineNumber();
+            }  
+            String st = java.util.Arrays.toString(s);
+            String line = System.getProperty("tony.inject");
+            int count = Integer.parseInt(line);
+            if (st.contains("SSTableReader$InstanceTidier$1")) {
+              logger.info("The {}-th delete",cc+1);
+              if (++cc == count) {
+                logger.info("my injection " + cc + st);
+                throw new IOException("your message");
+              }
+            } 
             Files.delete(file.toPath());
         }
         catch (NoSuchFileException e)
